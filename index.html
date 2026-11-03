@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculateur de rentabilité selon le statut — UPP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --rouge:#D01A18;--encre:#0E0E0E;--blanc:#FFFFFF;--creme:#F7F3F1;
+    --gris:#6B6B6B;--liseré:#E6DCD8;--rouge-voile:#FBEDEC;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Barlow',system-ui,sans-serif;color:var(--encre);background:var(--creme);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 20px 64px}
+  .head{position:relative;background:var(--rouge);color:var(--blanc);padding:38px 34px 34px;overflow:hidden}
+  .head .ghost{position:absolute;right:-10px;top:-26px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:200px;line-height:1;color:rgba(255,255,255,.10);letter-spacing:-6px;pointer-events:none;user-select:none}
+  .kicker{font-weight:600;text-transform:uppercase;letter-spacing:.32em;font-size:12px;opacity:.92}
+  .head h1{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:46px;line-height:.98;margin-top:8px;text-transform:uppercase;letter-spacing:.5px}
+  .head p{max-width:640px;margin-top:14px;font-size:15.5px;opacity:.97}
+  .head .maj{margin-top:16px;font-size:12px;text-transform:uppercase;letter-spacing:.18em;opacity:.85}
+  .card{background:var(--blanc);border:1px solid var(--liseré);border-top:none}
+  .step{padding:30px 34px;border-bottom:1px solid var(--liseré)}
+  .step-no{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .num{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;color:var(--blanc);background:var(--rouge);width:38px;height:38px;display:grid;place-items:center;flex:0 0 auto}
+  .step-no h2{font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;font-size:26px;letter-spacing:.5px;line-height:1}
+  .lead{color:var(--gris);font-size:14.5px;max-width:700px;margin-bottom:22px}
+
+  .statuts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+  .statut{border:1px solid var(--liseré);background:var(--blanc);padding:14px;cursor:pointer;text-align:left;transition:border-color .15s,background .15s}
+  .statut:hover{border-color:var(--rouge)}
+  .statut.on{border-color:var(--rouge);background:var(--rouge-voile)}
+  .statut:focus-visible{outline:3px solid var(--encre);outline-offset:2px}
+  .statut b{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;text-transform:uppercase}
+  .statut span{font-size:12.5px;color:var(--gris)}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px 24px}
+  .field{display:flex;flex-direction:column;gap:7px}
+  .field.full{grid-column:1 / -1}
+  label{font-weight:600;font-size:13.5px}
+  label .hint{display:block;font-weight:400;color:var(--gris);font-size:12.5px;margin-top:2px}
+  input[type=number]{font-family:'Barlow',sans-serif;font-size:16px;color:var(--encre);padding:11px 13px;border:1px solid var(--liseré);background:var(--blanc);outline:none;transition:border-color .15s,box-shadow .15s;width:100%}
+  input[type=number]:focus{border-color:var(--rouge);box-shadow:0 0 0 3px var(--rouge-voile)}
+  .suffix{position:relative}
+  .suffix::after{content:attr(data-unit);position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--gris);font-size:13px;pointer-events:none}
+  .suffix input{padding-right:42px}
+
+  details.frais{border:1px solid var(--liseré);margin-top:8px;grid-column:1 / -1}
+  details.frais summary{cursor:pointer;padding:13px 16px;font-weight:600;font-size:13.5px;background:var(--creme);list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  details.frais summary::-webkit-details-marker{display:none}
+  details.frais summary::after{content:"Ouvrir";font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--rouge)}
+  details.frais[open] summary::after{content:"Fermer"}
+  details.frais summary:focus-visible{outline:3px solid var(--encre);outline-offset:-3px}
+  .fbody{padding:20px 16px}
+  .fgroup{margin-bottom:20px}
+  .fgroup h3{font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;font-size:15px;letter-spacing:.08em;color:var(--rouge);padding-bottom:6px;margin-bottom:8px;border-bottom:1px solid var(--liseré)}
+  .fline{display:grid;grid-template-columns:22px 1fr 110px;gap:10px;align-items:center;padding:5px 0}
+  .fline label{font-weight:400;font-size:14px;cursor:pointer}
+  .fline input[type=checkbox]{width:17px;height:17px;accent-color:var(--rouge);cursor:pointer}
+  .fline input[type=number]{padding:6px 9px;font-size:14px;text-align:right}
+  .fline.off label{color:var(--gris)}
+  .fline.off input[type=number]{background:var(--creme);color:var(--gris)}
+  .fresult{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;background:var(--rouge-voile);border:1px solid var(--rouge);padding:16px}
+  .fresult .fk{font-size:13px;color:var(--gris);text-transform:uppercase;letter-spacing:.05em}
+  .fresult .fv{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:28px;line-height:1.1}
+  .btn{font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--blanc);background:var(--rouge);border:none;padding:13px 22px;cursor:pointer}
+  .btn:hover{background:var(--encre)}
+  .btn:focus-visible{outline:3px solid var(--encre);outline-offset:2px}
+
+  .ventil{margin-top:26px;border-top:2px solid var(--encre);padding-top:6px}
+  .vline{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--liseré);font-size:14.5px}
+  .vline span{color:var(--gris)}
+  .vline b{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px}
+  .vline.strong span{color:var(--encre);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:13.5px}
+
+  .subtotal{display:flex;justify-content:space-between;align-items:baseline;margin-top:18px;padding-top:16px;border-top:2px solid var(--encre)}
+  .subtotal span{font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:13.5px}
+  .subtotal b{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:30px}
+
+  .total{background:var(--rouge);color:var(--blanc);padding:26px 34px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+  .total .lbl{font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;font-size:24px;letter-spacing:.5px}
+  .total .val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:44px;line-height:1}
+  .total small{display:block;font-weight:400;font-size:12.5px;opacity:.9;text-align:right}
+  .total.encre{background:var(--encre)}
+
+  .compare{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+  .ccell{border:1px solid var(--liseré);padding:14px}
+  .ccell .k{font-size:12px;color:var(--gris);text-transform:uppercase;letter-spacing:.05em}
+  .ccell .v{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:26px;margin-top:4px}
+  .ccell.flag{border-color:var(--rouge);background:var(--rouge-voile)}
+
+  .note{font-size:12.5px;color:var(--gris);padding:20px 34px 26px;max-width:820px}
+  .note b{color:var(--encre)}
+  .note p{margin-top:10px}
+  @media(max-width:680px){
+    .grid,.statuts,.compare{grid-template-columns:1fr}
+    .head h1{font-size:36px}.total .val{font-size:36px}
+    .step,.note{padding-left:20px;padding-right:20px}
+    .fline{grid-template-columns:22px 1fr 92px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <div class="ghost">UPP</div>
+    <div class="kicker">Les outils du photographe professionnel</div>
+    <h1>Calculateur de rentabilité<br>selon le statut</h1>
+    <p>Pour une somme versée par votre client, que vous reste-t-il une fois les prélèvements acquittés ? Cet outil estime vos frais réels, votre rentabilité et le prix à facturer pour atteindre le revenu horaire que vous visez. Il s'agit d'une estimation indicative, appelée à être affinée avec votre comptable.</p>
+    <div class="maj">Taux en vigueur au 1er janvier 2026</div>
+  </header>
+
+  <main class="card">
+
+    <section class="step">
+      <div class="step-no"><div class="num">1</div><h2>Votre profil</h2></div>
+      <p class="lead">Sélectionnez votre statut pour appliquer les taux légaux 2026. Chaque valeur reste ajustable, afin de coller à votre situation propre.</p>
+
+      <div class="statuts" id="statuts">
+        <button class="statut" data-base="revenu" data-coef="1.15" data-tva="10" data-soc="16.2" data-ret="8" data-imp="11">
+          <b>Auteur</b><span>Déclaration contrôlée BNC, TVA 10 % sur les droits, assiette majorée de 15 %, retraite RAAP</span>
+        </button>
+        <button class="statut" data-base="ca" data-coef="1" data-tva="0" data-soc="21.5" data-ret="0" data-imp="1.7">
+          <b>Microentrepreneur BIC</b><span>Prestations artisanales, franchise de TVA, cotisations assises sur le chiffre d'affaires</span>
+        </button>
+        <button class="statut" data-base="ca" data-coef="1" data-tva="0" data-soc="25.8" data-ret="0" data-imp="2.2">
+          <b>Microentrepreneur BNC</b><span>Activité libérale hors Cipav, franchise de TVA, cotisations assises sur le chiffre d'affaires</span>
+        </button>
+        <button class="statut" data-base="revenu" data-coef="0.74" data-tva="20" data-soc="16.5" data-ret="26.7" data-imp="11">
+          <b>Artisan</b><span>Code 7420Z, régime réel BIC, TVA 20 %, assiette abattue de 26 %</span>
+        </button>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label>Taux de TVA appliqué
+            <span class="hint">10 % sur les droits d'auteur, 5,5 % sur les tirages d'art, 20 % sur les prestations.</span>
+          </label>
+          <div class="suffix" data-unit="%"><input type="number" id="tva" value="10" min="0" step="0.5"></div>
+        </div>
+        <div class="field">
+          <label>Cotisations sociales
+            <span class="hint">Maladie, famille, CSG, CRDS, formation professionnelle.</span>
+          </label>
+          <div class="suffix" data-unit="%"><input type="number" id="soc" value="16.2" min="0" step="0.1"></div>
+        </div>
+        <div class="field">
+          <label>Cotisations retraite
+            <span class="hint">Retraite de base et complémentaire, hors régime micro qui les intègre déjà.</span>
+          </label>
+          <div class="suffix" data-unit="%"><input type="number" id="ret" value="8" min="0" step="0.1"></div>
+        </div>
+        <div class="field">
+          <label>Coefficient d'assiette sociale
+            <span class="hint">1,15 pour l'auteur, 0,74 pour le régime réel, 1 pour la micro.</span>
+          </label>
+          <div class="suffix" data-unit="×"><input type="number" id="coef" value="1.15" min="0" step="0.01"></div>
+        </div>
+        <div class="field full">
+          <label>Taux d'imposition
+            <span class="hint">Appliqué au revenu net de cotisations.</span>
+          </label>
+          <div class="suffix" data-unit="%"><input type="number" id="imp" value="11" min="0" step="0.5"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="step">
+      <div class="step-no"><div class="num">2</div><h2>Vos frais professionnels</h2></div>
+      <p class="lead">Cochez les postes que vous supportez et ajustez les montants annuels. Le taux se déduit de votre chiffre d'affaires hors taxes. Vous gardez la main sur la valeur finale, que vous pouvez saisir directement si vous la connaissez.</p>
+
+      <div class="grid">
+        <div class="field">
+          <label>Chiffre d'affaires annuel hors taxes
+            <span class="hint">Base de calcul du taux de frais.</span>
+          </label>
+          <div class="suffix" data-unit="€"><input type="number" id="caAnnuel" value="35000" min="0" step="1000"></div>
+        </div>
+        <div class="field">
+          <label>Taux de frais professionnels retenu
+            <span class="hint">Valeur utilisée dans tous les calculs qui suivent.</span>
+          </label>
+          <div class="suffix" data-unit="%"><input type="number" id="frais" value="30" min="0" step="0.5"></div>
+        </div>
+
+        <details class="frais">
+          <summary>Estimer mon taux poste par poste</summary>
+          <div class="fbody">
+
+            <div class="fgroup">
+              <h3>Matériel et production</h3>
+              <div class="fline"><input type="checkbox" class="fchk" id="c1" checked><label for="c1">Amortissement du matériel photo et vidéo</label><input type="number" class="famt" id="a1" value="2500" min="0" step="50"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c2"><label for="c2">Location de matériel et de studio</label><input type="number" class="famt" id="a2" value="800" min="0" step="50"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c3" checked><label for="c3">Stockage, disques durs et sauvegarde</label><input type="number" class="famt" id="a3" value="400" min="0" step="50"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c4"><label for="c4">Consommables, tirages et encadrement</label><input type="number" class="famt" id="a4" value="600" min="0" step="50"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c5"><label for="c5">Sous-traitance, retouche et assistanat</label><input type="number" class="famt" id="a5" value="1200" min="0" step="50"></div>
+            </div>
+
+            <div class="fgroup">
+              <h3>Outils numériques</h3>
+              <div class="fline"><input type="checkbox" class="fchk" id="c6" checked><label for="c6">Logiciels de retouche et de catalogage</label><input type="number" class="famt" id="a6" value="480" min="0" step="20"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c7" checked><label for="c7">Téléphone mobile et forfait</label><input type="number" class="famt" id="a7" value="360" min="0" step="20"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c8" checked><label for="c8">Accès internet</label><input type="number" class="famt" id="a8" value="360" min="0" step="20"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c9" checked><label for="c9">Site web, nom de domaine et hébergement</label><input type="number" class="famt" id="a9" value="240" min="0" step="20"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c10"><label for="c10">Galeries de livraison et espace client</label><input type="number" class="famt" id="a10" value="180" min="0" step="20"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c11"><label for="c11">Outils de gestion, facturation et devis</label><input type="number" class="famt" id="a11" value="240" min="0" step="20"></div>
+            </div>
+
+            <div class="fgroup">
+              <h3>Déplacements</h3>
+              <div class="fline"><input type="checkbox" class="fchk" id="c12" checked><label for="c12">Véhicule, carburant et entretien</label><input type="number" class="famt" id="a12" value="1800" min="0" step="50"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c13"><label for="c13">Transports, péages et stationnement</label><input type="number" class="famt" id="a13" value="500" min="0" step="50"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c14"><label for="c14">Hébergement et repas professionnels</label><input type="number" class="famt" id="a14" value="600" min="0" step="50"></div>
+            </div>
+
+            <div class="fgroup">
+              <h3>Local et énergie</h3>
+              <div class="fline"><input type="checkbox" class="fchk" id="c15"><label for="c15">Loyer du studio ou de l'atelier</label><input type="number" class="famt" id="a15" value="4800" min="0" step="100"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c16" checked><label for="c16">Quote-part du domicile affectée au bureau</label><input type="number" class="famt" id="a16" value="900" min="0" step="50"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c17" checked><label for="c17">Électricité, chauffage et charges</label><input type="number" class="famt" id="a17" value="400" min="0" step="50"></div>
+            </div>
+
+            <div class="fgroup">
+              <h3>Assurances et protection</h3>
+              <div class="fline"><input type="checkbox" class="fchk" id="c18" checked><label for="c18">Responsabilité civile professionnelle</label><input type="number" class="famt" id="a18" value="300" min="0" step="20"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c19" checked><label for="c19">Assurance du matériel</label><input type="number" class="famt" id="a19" value="350" min="0" step="20"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c20" checked><label for="c20">Mutuelle santé</label><input type="number" class="famt" id="a20" value="900" min="0" step="50"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c21"><label for="c21">Prévoyance et perte d'exploitation</label><input type="number" class="famt" id="a21" value="600" min="0" step="50"></div>
+            </div>
+
+            <div class="fgroup">
+              <h3>Gestion et développement</h3>
+              <div class="fline"><input type="checkbox" class="fchk" id="c22" checked><label for="c22">Expert-comptable ou association de gestion</label><input type="number" class="famt" id="a22" value="900" min="0" step="50"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c23" checked><label for="c23">Frais bancaires professionnels</label><input type="number" class="famt" id="a23" value="180" min="0" step="20"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c24" checked><label for="c24">Cotisation UPP et adhésions professionnelles</label><input type="number" class="famt" id="a24" value="300" min="0" step="20"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c25" checked><label for="c25">Cotisation foncière des entreprises</label><input type="number" class="famt" id="a25" value="400" min="0" step="50"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c26"><label for="c26">Formation continue</label><input type="number" class="famt" id="a26" value="600" min="0" step="50"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c27"><label for="c27">Communication, publicité et book</label><input type="number" class="famt" id="a27" value="500" min="0" step="50"></div>
+              <div class="fline"><input type="checkbox" class="fchk" id="c28"><label for="c28">Salons, concours et frais de représentation</label><input type="number" class="famt" id="a28" value="500" min="0" step="50"></div>
+            </div>
+
+            <div class="fresult">
+              <div>
+                <div class="fk">Total annuel des frais cochés</div>
+                <div class="fv" id="fraisTotal">0 €</div>
+              </div>
+              <div>
+                <div class="fk">Soit un taux de</div>
+                <div class="fv" id="fraisTaux">0 %</div>
+              </div>
+              <button class="btn" type="button" id="appliquer">Appliquer ce taux</button>
+            </div>
+
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="step">
+      <div class="step-no"><div class="num">3</div><h2>Ce qu'il vous reste sur une facture</h2></div>
+      <p class="lead">Saisissez une somme encaissée pour en suivre la décomposition jusqu'au revenu disponible.</p>
+
+      <div class="grid">
+        <div class="field full">
+          <label>Prix de vente TTC encaissé
+            <span class="hint">Le montant total réglé par votre client.</span>
+          </label>
+          <div class="suffix" data-unit="€"><input type="number" id="ttc" value="1000" min="0" step="50"></div>
+        </div>
+      </div>
+
+      <div class="ventil">
+        <div class="vline"><span>Chiffre d'affaires hors taxes</span><b id="vHt">0 €</b></div>
+        <div class="vline"><span>TVA reversée</span><b id="vTva">0 €</b></div>
+        <div class="vline"><span>Frais professionnels</span><b id="vFrais">0 €</b></div>
+        <div class="vline"><span>Cotisations sociales</span><b id="vSoc">0 €</b></div>
+        <div class="vline"><span>Cotisations retraite</span><b id="vRet">0 €</b></div>
+        <div class="vline"><span>Impôt sur le revenu</span><b id="vImp">0 €</b></div>
+        <div class="vline strong"><span>Assiette sociale retenue</span><b id="vAssiette">0 €</b></div>
+      </div>
+
+      <div class="subtotal"><span>Taux de prélèvement global</span><b id="tauxGlobal">0 %</b></div>
+    </section>
+
+    <div class="total">
+      <div class="lbl">Votre rentabilité réelle</div>
+      <div><div class="val" id="renta">0 €</div><small>ce qui vous reste pour vivre, hors prélèvements</small></div>
+    </div>
+
+    <section class="step">
+      <div class="step-no"><div class="num">4</div><h2>Votre revenu horaire</h2></div>
+      <p class="lead">Rapportez votre rentabilité réelle au temps consacré, afin de situer votre revenu horaire au regard des repères du marché du travail.</p>
+
+      <div class="grid">
+        <div class="field">
+          <label>Prix de vente TTC d'une journée</label>
+          <div class="suffix" data-unit="€"><input type="number" id="jour" value="1400" min="0" step="50"></div>
+        </div>
+        <div class="field"></div>
+        <div class="field">
+          <label>Heures de prise de vue dans la journée</label>
+          <div class="suffix" data-unit="h"><input type="number" id="hJour" value="7" min="0" step="0.5"></div>
+        </div>
+        <div class="field">
+          <label>Heures additionnelles
+            <span class="hint">Préparation et post-production.</span>
+          </label>
+          <div class="suffix" data-unit="h"><input type="number" id="hAdd" value="10" min="0" step="0.5"></div>
+        </div>
+        <div class="field">
+          <label>Référence SMIC horaire brut
+            <span class="hint">12,31 € depuis le 1er juin 2026.</span>
+          </label>
+          <div class="suffix" data-unit="€"><input type="number" id="smic" value="12.31" min="0" step="0.01"></div>
+        </div>
+        <div class="field">
+          <label>Référence salaire horaire médian
+            <span class="hint">14,44 € net, soit 2 190 € mensuels pour 151,67 heures, secteur privé 2024.</span>
+          </label>
+          <div class="suffix" data-unit="€"><input type="number" id="median" value="14.44" min="0" step="0.01"></div>
+        </div>
+      </div>
+
+      <div class="compare">
+        <div class="ccell flag"><div class="k">Votre revenu horaire réel</div><div class="v" id="revH">0 €</div></div>
+        <div class="ccell"><div class="k">SMIC horaire brut</div><div class="v" id="smicV">0 €</div></div>
+        <div class="ccell"><div class="k">Salaire horaire médian net</div><div class="v" id="medV">0 €</div></div>
+      </div>
+    </section>
+
+    <section class="step">
+      <div class="step-no"><div class="num">5</div><h2>Le prix à facturer</h2></div>
+      <p class="lead">Le raisonnement inverse. Indiquez le revenu horaire que vous visez et le temps consacré, l'outil remonte jusqu'au montant à porter sur le devis.</p>
+
+      <div class="grid">
+        <div class="field">
+          <label>Revenu horaire visé
+            <span class="hint">Net de cotisations, de frais et d'impôt.</span>
+          </label>
+          <div class="suffix" data-unit="€"><input type="number" id="cibleH" value="25" min="0" step="1"></div>
+        </div>
+        <div class="field">
+          <label>Heures consacrées à la mission
+            <span class="hint">Prise de vue, préparation, post-production, échanges.</span>
+          </label>
+          <div class="suffix" data-unit="h"><input type="number" id="cibleHeures" value="17" min="0" step="0.5"></div>
+        </div>
+      </div>
+
+      <div class="ventil">
+        <div class="vline"><span>Revenu disponible visé</span><b id="iCible">0 €</b></div>
+        <div class="vline"><span>Chiffre d'affaires hors taxes nécessaire</span><b id="iHt">0 €</b></div>
+        <div class="vline"><span>TVA à ajouter</span><b id="iTva">0 €</b></div>
+        <div class="vline strong"><span>Taux horaire hors taxes à facturer</span><b id="iTauxH">0 €</b></div>
+      </div>
+    </section>
+
+    <div class="total encre">
+      <div class="lbl">Prix à facturer TTC</div>
+      <div><div class="val" id="iTtc">0 €</div><small>pour atteindre le revenu horaire visé</small></div>
+    </div>
+
+    <div class="note">
+      <p><b>Lecture du résultat.</b> La TVA se calcule sur le prix hors taxes et se trouve reversée à l'administration. Les frais professionnels viennent ensuite en déduction du chiffre d'affaires hors taxes. Les cotisations sociales et retraite portent sur l'assiette propre à chaque statut, soit le bénéfice majoré de 15 % pour l'auteur, le revenu abattu de 26 % au régime réel, le chiffre d'affaires encaissé en microentreprise. L'impôt s'applique enfin au revenu net de cotisations.</p>
+      <p><b>Sur les frais professionnels.</b> Les montants proposés constituent des ordres de grandeur destinés à amorcer la réflexion. Reprenez vos relevés bancaires et votre livre de dépenses pour les ajuster. Certains postes se partagent entre usage privé et usage professionnel, le téléphone, le véhicule ou la quote-part du domicile notamment, seule la fraction professionnelle demeure déductible. En microentreprise, les frais restent à votre charge sans déduction possible, l'abattement forfaitaire en tient lieu, leur recensement garde toute son utilité pour fixer vos tarifs.</p>
+      <p><b>Taux retenus au 1er janvier 2026.</b> Auteur : vieillesse plafonnée 6,15 %, CSG 9,20 %, CRDS 0,50 %, formation professionnelle 0,35 %, soit 16,20 %, auxquels s'ajoute la retraite complémentaire RAAP de l'IRCEC à 8 %, ramenée à 4 % sur option lorsque l'assiette demeure sous 32 076 €. Microentreprise : 21,2 % pour les prestations de services BIC et 25,6 % pour les activités libérales BNC, majorés de la contribution à la formation professionnelle. Artisan au réel : maladie selon barème progressif jusqu'à 8,5 %, invalidité et décès 1,3 %, allocations familiales jusqu'à 3,1 %, CSG et CRDS 9,7 %, retraite de base 17,87 % puis 0,72 % au delà du plafond, retraite complémentaire 8,1 %.</p>
+      <p><b>Portée de l'outil.</b> Ce modèle reste volontairement simplifié, il offre un ordre de grandeur fiable plutôt qu'un calcul fiscal exact. Les barèmes progressifs de maladie et d'allocations familiales, le plafond annuel de la Sécurité sociale fixé à 48 060 € et les cotisations minimales méritent un examen avec votre expert-comptable.</p>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const eur = n => (Math.round(n)).toLocaleString('fr-FR') + ' €';
+  const eur2 = n => (Math.round(n*100)/100).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+  const pct = n => (Math.round(n*10)/10).toLocaleString('fr-FR') + ' %';
+  const v = id => parseFloat(document.getElementById(id).value) || 0;
+  let base = 'revenu';
+
+  /* Statuts */
+  document.querySelectorAll('.statut').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('.statut').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      base = b.dataset.base;
+      document.getElementById('tva').value  = b.dataset.tva;
+      document.getElementById('soc').value  = b.dataset.soc;
+      document.getElementById('ret').value  = b.dataset.ret;
+      document.getElementById('imp').value  = b.dataset.imp;
+      document.getElementById('coef').value = b.dataset.coef;
+      compute();
+    });
+  });
+
+  /* Estimateur de frais */
+  function fraisEstime(){
+    let total = 0;
+    document.querySelectorAll('.fchk').forEach(chk=>{
+      const amt  = document.getElementById('a' + chk.id.slice(1));
+      const line = chk.closest('.fline');
+      line.classList.toggle('off', !chk.checked);
+      amt.disabled = !chk.checked;
+      if(chk.checked) total += parseFloat(amt.value) || 0;
+    });
+    const ca   = v('caAnnuel');
+    const taux = ca > 0 ? total / ca * 100 : 0;
+    document.getElementById('fraisTotal').textContent = eur(total);
+    document.getElementById('fraisTaux').textContent  = pct(taux);
+    return taux;
+  }
+  document.querySelectorAll('.fchk, .famt').forEach(el=>{
+    el.addEventListener('input', fraisEstime);
+    el.addEventListener('change', fraisEstime);
+  });
+  document.getElementById('appliquer').addEventListener('click',()=>{
+    document.getElementById('frais').value = Math.round(fraisEstime()*10)/10;
+    compute();
+  });
+  document.getElementById('caAnnuel').addEventListener('input', fraisEstime);
+
+  /* Cascade */
+  function detail(ttc){
+    const ht       = ttc / (1 + v('tva')/100);
+    const tva      = ttc - ht;
+    const frais    = ht * v('frais')/100;
+    const revenu   = ht - frais;
+    const assiette = (base === 'ca' ? ht : revenu) * v('coef');
+    const soc      = assiette * v('soc')/100;
+    const ret      = assiette * v('ret')/100;
+    const avant    = revenu - soc - ret;
+    const imp      = Math.max(avant,0) * v('imp')/100;
+    return {ht,tva,frais,revenu,assiette,soc,ret,imp,reste: avant - imp};
+  }
+
+  /* Part de revenu disponible par euro hors taxes */
+  function rendement(){
+    const f = 1 - v('frais')/100;
+    const a = (base === 'ca' ? 1 : f) * v('coef');
+    return (f - a*(v('soc')+v('ret'))/100) * (1 - v('imp')/100);
+  }
+
+  function compute(){
+    fraisEstime();
+
+    const d = detail(v('ttc'));
+    document.getElementById('vHt').textContent       = eur(d.ht);
+    document.getElementById('vTva').textContent      = eur(d.tva);
+    document.getElementById('vFrais').textContent    = eur(d.frais);
+    document.getElementById('vSoc').textContent      = eur(d.soc);
+    document.getElementById('vRet').textContent      = eur(d.ret);
+    document.getElementById('vImp').textContent      = eur(d.imp);
+    document.getElementById('vAssiette').textContent = eur(d.assiette);
+    const taux = v('ttc') > 0 ? (1 - d.reste / v('ttc')) * 100 : 0;
+    document.getElementById('tauxGlobal').textContent = pct(taux);
+    document.getElementById('renta').textContent = eur(d.reste);
+
+    const heures = v('hJour')+v('hAdd');
+    const dJour  = detail(v('jour'));
+    document.getElementById('revH').textContent   = eur2(heures>0 ? dJour.reste/heures : 0);
+    document.getElementById('smicV').textContent  = eur2(v('smic'));
+    document.getElementById('medV').textContent   = eur2(v('median'));
+
+    /* Calcul inversé */
+    const k      = rendement();
+    const cible  = v('cibleH') * v('cibleHeures');
+    const ht     = k > 0 ? cible / k : 0;
+    const ttcNec = ht * (1 + v('tva')/100);
+    document.getElementById('iCible').textContent = eur(cible);
+    document.getElementById('iHt').textContent    = k > 0 ? eur(ht) : 'Non atteignable';
+    document.getElementById('iTva').textContent   = k > 0 ? eur(ttcNec - ht) : '—';
+    document.getElementById('iTauxH').textContent = (k > 0 && v('cibleHeures') > 0) ? eur2(ht/v('cibleHeures')) : '—';
+    document.getElementById('iTtc').textContent   = k > 0 ? eur(ttcNec) : 'Non atteignable';
+  }
+
+  document.querySelectorAll('input[type=number]').forEach(el=>{
+    el.addEventListener('input',compute);
+    el.addEventListener('change',compute);
+  });
+  document.querySelector('.statut').classList.add('on');
+  compute();
+</script>
+<script>
+  /* Envoie la hauteur de la page au site qui l'intègre, pour ajuster l'iframe */
+  function envoyerHauteur(){
+    if (window.parent !== window) {
+      window.parent.postMessage({type:'upp-calc-hauteur', h: document.documentElement.scrollHeight}, '*');
+    }
+  }
+  new ResizeObserver(envoyerHauteur).observe(document.body);
+  window.addEventListener('load', envoyerHauteur);
+</script>
+</body>
+</html>
